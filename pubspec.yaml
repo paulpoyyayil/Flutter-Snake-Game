@@ -3,7 +3,7 @@ description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -27,7 +27,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  assets_audio_player: ^3.1.1
+  audioplayers: ^6.1.0
   confetti: ^0.7.0
   cupertino_icons: ^1.0.8
   custom_check_box: ^0.0.4
@@ -48,7 +48,7 @@ flutter_icons:
   ios: true
   remove_alpha_ios: true
   image_path: "assets/logo.png"
-  adaptive_icon_background: '#ffffff'
+  adaptive_icon_background: "#ffffff"
   adaptive_icon_foreground: "assets/logo_foreground.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -62,7 +62,6 @@ flutter_icons:
 # following page: https://dart.dev/tools/pub/pubspec
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
