@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:math';
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snake/constants.dart';
 import 'package:snake/screens/homepage.dart';
 import 'package:snake/widgets/food_pixel.dart';
@@ -20,12 +21,9 @@ class GameScreen extends StatefulWidget {
 enum snake_Direction { UP, DOWN, LEFT, RIGHT }
 
 class _GameScreenState extends State<GameScreen> {
-  final eatAudioPlayer = AssetsAudioPlayer();
-  final moveAudioPlayer = AssetsAudioPlayer();
-  final overAudioPlayer = AssetsAudioPlayer();
-  late Timer tempTimer;
-
+  late Timer snakeTimer;
   late ConfettiController _controllerCenter;
+  late AudioPlayer _audioPlayer;
 
   int rowSize = 20;
   int itemCount = 600;
@@ -35,29 +33,26 @@ class _GameScreenState extends State<GameScreen> {
 
   var currentDirection = snake_Direction.RIGHT;
 
-  List<int> snakePosition = [
-    0,
-    1,
-    2,
-  ];
+  List<int> snakePosition = [0, 1, 2];
 
-  int foodPosition = 55;
+  int foodPosition = -1;
 
   void startGame() async {
     gameHasStarted = true;
-    Timer.periodic(
+    snakeTimer = Timer.periodic(
       Duration(milliseconds: 200),
       (timer) {
-        tempTimer = timer;
-        setState(
-          () {
-            moveSnake();
-            if (gameOver()) {
-              timer.cancel();
-              alertDialog(context);
-            }
-          },
-        );
+        if (mounted) {
+          setState(
+            () {
+              moveSnake();
+              if (gameOver()) {
+                timer.cancel();
+                alertDialog(context);
+              }
+            },
+          );
+        }
       },
     );
   }
@@ -65,9 +60,14 @@ class _GameScreenState extends State<GameScreen> {
   void eatFood() {
     hasSound ? playEatingSound() : stopPlayer();
     currentScore++;
-    while (snakePosition.contains(foodPosition)) {
-      foodPosition = Random().nextInt(499);
-    }
+    placeFood();
+  }
+
+  void placeFood() {
+    List<int> availablePositions = List.generate(itemCount, (index) => index)
+      ..removeWhere((pos) => snakePosition.contains(pos));
+    foodPosition =
+        availablePositions[Random().nextInt(availablePositions.length)];
   }
 
   bool gameOver() {
@@ -86,16 +86,31 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   stopGame() {
-    tempTimer.cancel();
+    snakeTimer.cancel();
     Navigator.push(
         context, MaterialPageRoute(builder: ((context) => Homepage())));
     newGame();
   }
 
-  pauseGame() {
-    tempTimer = Timer.periodic(Duration(milliseconds: 0), (timer) {
-      setState(() {});
-    });
+  void pauseGame() {
+    snakeTimer.cancel();
+  }
+
+  void resumeGame() {
+    snakeTimer = Timer.periodic(
+      Duration(milliseconds: 200),
+      (timer) {
+        if (mounted) {
+          setState(() {
+            moveSnake();
+            if (gameOver()) {
+              timer.cancel();
+              alertDialog(context);
+            }
+          });
+        }
+      },
+    );
   }
 
   alertDialog(BuildContext context) {
@@ -146,12 +161,8 @@ class _GameScreenState extends State<GameScreen> {
 
   void newGame() {
     setState(() {
-      snakePosition = [
-        0,
-        1,
-        2,
-      ];
-      foodPosition = 55;
+      snakePosition = [0, 1, 2];
+      placeFood();
       currentDirection = snake_Direction.RIGHT;
       gameHasStarted = false;
       currentScore = 0;
@@ -205,66 +216,73 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
-  void checkHighScore() {
+  void checkHighScore() async {
     if (currentScore > highScore) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
       setState(() {
         highScore = currentScore;
       });
+      prefs.setInt('highScore', highScore);
     }
   }
 
-  playMovingSound() {
-    moveAudioPlayer.open(
-      Audio(
-        'assets/sounds/move.mp3',
-      ),
-      pitch: 0.5,
-      volume: 0.5,
-    );
+  void playMovingSound() async {
+    if (hasSound) {
+      await _audioPlayer.play(AssetSource('sounds/move.mp3'));
+    }
   }
 
-  playEatingSound() {
-    eatAudioPlayer.open(
-      Audio('assets/sounds/eat.mp3'),
-      volume: 0.5,
-    );
+  void playEatingSound() async {
+    if (hasSound) {
+      await _audioPlayer.play(AssetSource('sounds/eat.mp3'));
+    }
   }
 
-  playGameOverSound() {
-    overAudioPlayer.open(
-      Audio('assets/sounds/over.mp3'),
-      volume: 0.5,
-    );
+  void playGameOverSound() async {
+    if (hasSound) {
+      await _audioPlayer.play(AssetSource('sounds/over.mp3'));
+    }
   }
 
-  stopPlayer() {
-    moveAudioPlayer.stop();
-    eatAudioPlayer.stop();
-    overAudioPlayer.stop();
+  stopPlayer() async {
+    await _audioPlayer.stop();
   }
 
   @override
   void initState() {
+    placeFood();
+    loadHighScore();
     startGame();
     _controllerCenter =
         ConfettiController(duration: const Duration(seconds: 5));
     super.initState();
+    _audioPlayer = AudioPlayer();
   }
 
   @override
   void dispose() {
     startGame();
-    moveAudioPlayer.dispose();
-    eatAudioPlayer.dispose();
-    overAudioPlayer.dispose();
     _controllerCenter.dispose();
     super.dispose();
   }
 
+  void loadHighScore() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      highScore = (prefs.getInt('highScore') ?? 0); // Load saved high score
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        return _onWillPop();
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         body: SafeArea(
@@ -333,7 +351,7 @@ class _GameScreenState extends State<GameScreen> {
                           return SnakeBody();
                         }
                       } else if (foodPosition == index) {
-                        return FooddPixel();
+                        return FoodPixel();
                       } else {
                         return GridPixel();
                       }
@@ -388,28 +406,27 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Future<bool> _onWillPop() async {
+  void _onWillPop() async {
     pauseGame();
-    return (await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: new Text('Are you sure?'),
-            content: new Text('Do you want to quit the game??'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  startGame();
-                  Navigator.of(context).pop(false);
-                },
-                child: new Text('No'),
-              ),
-              TextButton(
-                onPressed: stopGame,
-                child: new Text('Yes'),
-              ),
-            ],
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: new Text('Are you sure?'),
+        content: new Text('Do you want to quit the game??'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              resumeGame();
+              Navigator.of(context).pop(false);
+            },
+            child: new Text('No'),
           ),
-        )) ??
-        false;
+          TextButton(
+            onPressed: stopGame,
+            child: new Text('Yes'),
+          ),
+        ],
+      ),
+    );
   }
 }
