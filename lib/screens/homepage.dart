@@ -12,31 +12,35 @@ class Homepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future<bool> _onWillPop() async {
-      return (await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Are you sure?'),
-              content: Text('Do you want to Exit the Application?'),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text('No'),
-                ),
-                TextButton(
-                  onPressed: () => SystemNavigator.pop(),
-                  child: Text('Yes'),
-                ),
-              ],
-            ),
-          )) ??
-          false;
+    void _onWillPop() async {
+      showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text('Are you sure?'),
+                content: Text('Do you want to Exit the Application?'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text('No'),
+                  ),
+                  TextButton(
+                    onPressed: () => SystemNavigator.pop(),
+                    child: Text('Yes'),
+                  ),
+                ],
+              ));
     }
 
     final _random = new Random();
     var element = snakeIcons[_random.nextInt(snakeIcons.length)];
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        return _onWillPop();
+      },
       child: Scaffold(
         backgroundColor: Colors.white,
         body: Container(
@@ -106,24 +110,24 @@ class Homepage extends StatelessWidget {
                   ),
                 ),
                 Spacer(),
-                Stack(
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          'Created by Paul',
-                          style: GoogleFonts.actor(
-                            fontSize: context.responsive(18),
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(
-                          height: context.responsive(12),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
+                // Stack(
+                //   children: [
+                //     Column(
+                //       children: [
+                //         Text(
+                //           'Created by Paul',
+                //           style: GoogleFonts.actor(
+                //             fontSize: context.responsive(18),
+                //             color: Colors.white,
+                //           ),
+                //         ),
+                //         SizedBox(
+                //           height: context.responsive(12),
+                //         ),
+                //       ],
+                //     ),
+                //   ],
+                // )
               ],
             ),
           ),
