@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
+import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:snake/constants.dart';
@@ -10,6 +11,7 @@ import 'package:snake/widgets/food_pixel.dart';
 import 'package:snake/widgets/grid_pixel.dart';
 import 'package:snake/widgets/snake_pixel.dart';
 import 'package:vibration/vibration.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -217,19 +219,71 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void checkHighScore() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
     if (currentScore > highScore) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
       setState(() {
         highScore = currentScore;
       });
       prefs.setInt('highScore', highScore);
+
+      // Show input dialog to enter name
+      TextEditingController nameController = TextEditingController();
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('New High Score!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Congratulations! You set a new high score!'),
+              SizedBox(height: 14),
+              TextField(
+                controller: nameController,
+                keyboardType: TextInputType.name,
+                decoration: const InputDecoration(
+                  hintText: 'Enter your name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                String playerName = nameController.text;
+                if (playerName.isNotEmpty) {
+                  saveHighScoreToFirestore(playerName, currentScore);
+                }
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
+// Function to save high score to Firestore
+  void saveHighScoreToFirestore(String name, int score) async {
+    FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final faker = Faker();
+    String randomName = faker.person.name();
+
+    await firestore.collection('high_scores').add({
+      'name': name.isEmpty ? randomName : name,
+      'score': score,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
+
   void playMovingSound() async {
-    if (hasSound) {
-      await _audioPlayer.play(AssetSource('sounds/move.mp3'));
-    }
+    // if (hasSound) {
+    //   await _audioPlayer.play(AssetSource('sounds/move.mp3'));
+    // }
   }
 
   void playEatingSound() async {

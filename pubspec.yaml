@@ -28,9 +28,12 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   audioplayers: ^6.1.0
+  cloud_firestore: ^5.4.2
   confetti: ^0.7.0
   cupertino_icons: ^1.0.8
   custom_check_box: ^0.0.4
+  faker: ^2.2.0
+  firebase_core: ^3.5.0
   flutter:
     sdk: flutter
   get: ^4.6.6

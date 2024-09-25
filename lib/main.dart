@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:snake/screens/homepage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations(
-    [
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ],
-  );
+Future<void> main() async {
+  await init();
   runApp(const MyApp());
 }
 
@@ -26,4 +22,15 @@ class MyApp extends StatelessWidget {
       home: Homepage(),
     );
   }
+}
+
+Future<void> init() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+    [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ],
+  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:snake/constants.dart';
 import 'package:snake/screens/game_screen.dart';
+import 'package:snake/screens/leaderboard.dart';
 import 'package:snake/screens/settings.dart';
 
 class Homepage extends StatelessWidget {
@@ -62,9 +63,7 @@ class Homepage extends StatelessWidget {
                     element,
                   ),
                 ),
-                SizedBox(
-                  height: context.responsive(24),
-                ),
+                SizedBox(height: context.responsive(24)),
                 TextButton(
                   onPressed: () {
                     Navigator.push(context,
@@ -79,9 +78,7 @@ class Homepage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: context.responsive(24),
-                ),
+                SizedBox(height: context.responsive(24)),
                 TextButton(
                   onPressed: () {
                     Navigator.push(context,
@@ -97,37 +94,25 @@ class Homepage extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: context.responsive(24),
-                ),
-                Text(
-                  'LEADERBOARD',
-                  style: GoogleFonts.rubikGlitch(
-                    fontSize: context.responsive(34),
-                    color: Colors.green.shade200,
-                    letterSpacing: 3,
-                    decorationThickness: 10,
+                SizedBox(height: context.responsive(24)),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => LeaderboardScreen()));
+                  },
+                  child: Text(
+                    'LEADERBOARD',
+                    style: GoogleFonts.rubikGlitch(
+                      fontSize: context.responsive(34),
+                      color: Colors.green.shade200,
+                      letterSpacing: 3,
+                      decorationThickness: 10,
+                    ),
                   ),
                 ),
                 Spacer(),
-                // Stack(
-                //   children: [
-                //     Column(
-                //       children: [
-                //         Text(
-                //           'Created by Paul',
-                //           style: GoogleFonts.actor(
-                //             fontSize: context.responsive(18),
-                //             color: Colors.white,
-                //           ),
-                //         ),
-                //         SizedBox(
-                //           height: context.responsive(12),
-                //         ),
-                //       ],
-                //     ),
-                //   ],
-                // )
               ],
             ),
           ),
