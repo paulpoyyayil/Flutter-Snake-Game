@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class FooddPixel extends StatelessWidget {
-  const FooddPixel({
+class FoodPixel extends StatelessWidget {
+  const FoodPixel({
     Key? key,
   }) : super(key: key);
 
